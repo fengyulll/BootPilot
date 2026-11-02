@@ -38,7 +38,7 @@ dotnet build -c Release
 dotnet publish -c Release -o publish
 ```
 
-产物是单文件 `publish/BootPilot.exe`（framework-dependent，需要 .NET 8 桌面运行时）。
+产物是单文件 `publish/BootPilot.exe`（framework-dependent，需要 .NET 8 Desktop Runtime）。
 
 重新生成图标（纯 Python，无需 Pillow）：
 
@@ -60,4 +60,4 @@ python tools/make_icon.py
 ## 兼容性
 
 - Windows 10 / 11，x64
-- .NET 8 桌面运行时
+- .NET 8 Desktop Runtime
