@@ -17,10 +17,14 @@
 
         <Style x:Key="PowerGlyph" TargetType="Path">
             <Setter Property="Stroke" Value="{StaticResource B.Accent}" />
-            <Setter Property="StrokeThickness" Value="1.9" />
+            <Setter Property="StrokeThickness" Value="1.7" />
             <Setter Property="StrokeStartLineCap" Value="Round" />
             <Setter Property="StrokeEndLineCap" Value="Round" />
-            <Setter Property="Data" Value="M 8,2.2 L 8,8 M 11.34,12.98 A 5.2,5.2 0 1 1 4.66,12.98" />
+            <!-- 圆心 (8,9) r=5.2；缺口 240°~300°（正上方 60°）。
+                 弧从 300° 顺时针经右→下→左到 240°，跨度 300°，
+                 所以 large-arc=1、sweep=1 才自洽。 -->
+            <Setter Property="Data"
+                    Value="M 8,2.4 L 8,8 M 10.6,4.5 A 5.2,5.2 0 1 1 5.4,4.5" />
         </Style>
     </Window.Resources>
 
