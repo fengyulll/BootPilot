@@ -52,9 +52,8 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Border x:Name="AdminBadge" CornerRadius="6" Padding="9,4" Margin="0,0,10,0"
-                            VerticalAlignment="Center" Cursor="Hand"
-                            Background="#F2F4F8" MouseLeftButtonUp="AdminBadge_Click">
-                        <TextBlock x:Name="AdminBadgeText" Text="普通权限 · 点此提权" FontSize="11"
+                            VerticalAlignment="Center" Background="#F2F4F8">
+                        <TextBlock x:Name="AdminBadgeText" Text="按需提权" FontSize="11"
                                    FontWeight="SemiBold" Foreground="{StaticResource B.TextSub}" />
                     </Border>
                     <Button Content="打开任务计划程序" Style="{StaticResource BtnSecondary}"
@@ -199,8 +198,8 @@
                             <CheckBox x:Name="ChkAdmin" Grid.Column="1" Style="{StaticResource Chk}"
                                       Content="以最高权限运行" VerticalAlignment="Center" Margin="22,0,0,0" />
 
-                            <Button Grid.Column="2" Content="添加自启项" Style="{StaticResource BtnPrimary}"
-                                    Click="Add_Click" />
+                            <Button x:Name="BtnAdd" Grid.Column="2" Content="添加自启项"
+                                    Style="{StaticResource BtnPrimary}" Click="Add_Click" />
                         </Grid>
                     </StackPanel>
                 </Border>

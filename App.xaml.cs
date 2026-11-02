@@ -1,6 +1,7 @@
 using System;
 using System.Windows;
 using System.Windows.Threading;
+using BootPilot.Services;
 
 namespace BootPilot;
 
@@ -8,6 +9,16 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
+        // 提权子进程模式：只执行一次任务操作，然后立刻退出，不创建任何窗口。
+        if (e.Args.Length >= 3 &&
+            string.Equals(e.Args[0], "--apply", StringComparison.OrdinalIgnoreCase))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            int exitCode = ApplyRunner.Run(e.Args[1], e.Args[2]);
+            Environment.Exit(exitCode);
+            return;
+        }
+
         base.OnStartup(e);
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;

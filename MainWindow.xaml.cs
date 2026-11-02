@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -23,7 +23,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _toastTimer = new();
 
     private string _lastAutoWorkDir = string.Empty;
-    private bool _suppressTriggerPrompt;
+    private bool _busy;
 
     public MainWindow()
     {
@@ -31,7 +31,7 @@ public partial class MainWindow : Window
 
         ItemsHost.ItemsSource = _items;
 
-        _toastTimer.Interval = TimeSpan.FromSeconds(2.8);
+        _toastTimer.Interval = TimeSpan.FromSeconds(3.2);
         _toastTimer.Tick += (_, _) =>
         {
             _toastTimer.Stop();
@@ -43,70 +43,41 @@ public partial class MainWindow : Window
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        UpdateAdminBadge();
-        _suppressTriggerPrompt = true;
-        ApplyStartupArguments();
-        _suppressTriggerPrompt = false;
+        UpdatePermissionBadge();
         LoadList();
         TbTarget.Focus();
+
+        if (TaskSchedulerService.IsElevated)
+            ShowToast("以管理员身份运行时 Windows 会阻止拖放文件，请改用「浏览…」按钮；建议平时用普通权限启动");
     }
 
-    private void UpdateAdminBadge()
+    private void UpdatePermissionBadge()
     {
-        bool elevated = TaskSchedulerService.IsElevated;
-
-        AdminBadge.Background = elevated
-            ? (Brush)FindResource("B.OkSoft")
-            : new SolidColorBrush(Color.FromRgb(0xF2, 0xF4, 0xF8));
-        AdminBadgeText.Text = elevated ? "管理员模式" : "普通权限 · 点此提权";
-        AdminBadgeText.Foreground = elevated
-            ? (Brush)FindResource("B.Ok")
-            : (Brush)FindResource("B.TextSub");
-        AdminBadge.Cursor = elevated ? Cursors.Arrow : Cursors.Hand;
-        AdminBadge.ToolTip = elevated
-            ? "BootPilot 已以管理员身份运行，可创建任意类型的自启项"
-            : "点此以管理员身份重新启动。创建「系统启动时」或「最高权限运行」的自启项需要它";
-    }
-
-    private void AdminBadge_Click(object sender, MouseButtonEventArgs e)
-    {
-        if (TaskSchedulerService.IsElevated) return;
-        RelaunchElevated(null, null, 0, false, false);
-    }
-
-    // ==================== 启动参数（提权重启时带回填写内容） ====================
-
-    private void ApplyStartupArguments()
-    {
-        var args = Environment.GetCommandLineArgs();
-        string? target = null, name = null, extraArgs = null;
-        int delay = 0;
-        bool admin = false, boot = false;
-
-        for (int i = 1; i < args.Length; i++)
+        if (TaskSchedulerService.IsElevated)
         {
-            string value = i + 1 < args.Length ? args[i + 1] : string.Empty;
-            switch (args[i].ToLowerInvariant())
-            {
-                case "--target": target = value; i++; break;
-                case "--name": name = value; i++; break;
-                case "--args": extraArgs = value; i++; break;
-                case "--delay": int.TryParse(value, out delay); i++; break;
-                case "--admin": admin = true; break;
-                case "--boot": boot = true; break;
-            }
+            AdminBadge.Background = new SolidColorBrush(Color.FromRgb(0xFF, 0xF4, 0xE3));
+            AdminBadgeText.Text = "管理员模式 · 拖放受限";
+            AdminBadgeText.Foreground = (Brush)FindResource("B.Warn");
+            AdminBadge.ToolTip =
+                "以管理员身份运行时，Windows 的 UIPI 机制会阻止从资源管理器拖入文件。\n" +
+                "建议用普通方式启动 BootPilot —— 只有真正需要权限的那一步才会弹 UAC。";
         }
-
-        if (boot) RbBoot.IsChecked = true;
-        if (admin) ChkAdmin.IsChecked = true;
-        if (delay > 0) TbDelay.Text = Math.Clamp(delay, 0, 3600).ToString();
-
-        if (!string.IsNullOrWhiteSpace(target))
+        else
         {
-            ApplyTarget(target);
-            if (!string.IsNullOrWhiteSpace(extraArgs)) TbArgs.Text = extraArgs;
-            if (!string.IsNullOrWhiteSpace(name)) TbName.Text = SanitizeName(name);
+            AdminBadge.Background = (Brush)FindResource("B.OkSoft");
+            AdminBadgeText.Text = "按需提权";
+            AdminBadgeText.Foreground = (Brush)FindResource("B.Ok");
+            AdminBadge.ToolTip =
+                "BootPilot 保持普通权限运行，才能接收资源管理器的拖放。\n" +
+                "创建「系统启动时」的自启项时，会自动弹一次 UAC 申请权限。";
         }
+    }
+
+    private void SetBusy(bool busy)
+    {
+        _busy = busy;
+        BtnAdd.IsEnabled = !busy;
+        BtnAdd.Content = busy ? "处理中…" : "添加自启项";
     }
 
     // ==================== 拖拽 ====================
@@ -231,8 +202,10 @@ public partial class MainWindow : Window
 
     // ==================== 添加 ====================
 
-    private void Add_Click(object sender, RoutedEventArgs e)
+    private async void Add_Click(object sender, RoutedEventArgs e)
     {
+        if (_busy) return;
+
         string target = TbTarget.Text.Trim().Trim('"');
 
         if (target.Length == 0)
@@ -260,17 +233,6 @@ public partial class MainWindow : Window
         bool admin = ChkAdmin.IsChecked == true;
         int delay = ParseDelay();
 
-        if (boot && !TaskSchedulerService.IsElevated)
-        {
-            var answer = MessageBox.Show(this,
-                "「系统启动时」触发需要管理员权限。\n\n是否立即以管理员身份重新启动 BootPilot？\n（当前填写的内容会自动带过去，不用重填）",
-                "BootPilot — 需要管理员权限", MessageBoxButton.YesNo, MessageBoxImage.Information);
-
-            if (answer == MessageBoxResult.Yes)
-                RelaunchElevated(target, name, delay, admin, boot);
-            return;
-        }
-
         var spec = new TaskSpec
         {
             TaskName = TaskSchedulerService.Prefix + name,
@@ -291,31 +253,62 @@ public partial class MainWindow : Window
             if (answer != MessageBoxResult.Yes) return;
         }
 
+        bool created = false;
+        bool elevatedUsed = false;
+        string? error = null;
+
+        SetBusy(true);
         try
         {
-            _service.CreateOrUpdate(spec);
-            LoadList();
-            ClearForm();
-            ShowToast("已添加自启项：" + name);
+            if (TaskSchedulerService.IsElevated)
+            {
+                _service.CreateOrUpdate(spec);
+                created = true;
+            }
+            else
+            {
+                try
+                {
+                    _service.CreateOrUpdate(spec);
+                    created = true;
+                }
+                catch (BootPilotException ex) when (NeedsElevation(ex, boot))
+                {
+                    var result = await Task.Run(() => ElevationBroker.Run(
+                        new ElevatedRequest { Action = "Create", Spec = spec }));
 
-            if (admin && !TaskSchedulerService.IsElevated)
-                ShowToast("已添加，但「最高权限运行」通常需要管理员账户，运行失败请改回普通权限");
-        }
-        catch (BootPilotException ex) when (ex.Message.Contains("权限不足"))
-        {
-            var answer = MessageBox.Show(this,
-                ex.Message + "\n\n是否立即以管理员身份重新启动 BootPilot？\n（当前填写的内容会自动带过去，不用重填）",
-                "BootPilot — 需要管理员权限", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-
-            if (answer == MessageBoxResult.Yes)
-                RelaunchElevated(target, name, delay, admin, boot);
+                    created = result.Ok;
+                    elevatedUsed = result.Ok;
+                    error = result.Message;
+                }
+            }
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "BootPilot — 添加失败",
+            error = ex.Message;
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+
+        if (created)
+        {
+            LoadList();
+            ClearForm();
+            ShowToast(elevatedUsed
+                ? $"已通过管理员权限添加：{name}"
+                : $"已添加自启项：{name}");
+        }
+        else if (!string.IsNullOrEmpty(error))
+        {
+            MessageBox.Show(this, error, "BootPilot — 添加失败",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
+
+    private static bool NeedsElevation(BootPilotException ex, bool bootTrigger)
+        => bootTrigger || ex.Message.Contains("权限不足");
 
     private int ParseDelay()
     {
@@ -326,42 +319,6 @@ public partial class MainWindow : Window
         TbDelay.Text = "0";
         ShowToast("延迟秒数需为 0–3600 之间的整数，已重置为 0");
         return 0;
-    }
-
-    private void RelaunchElevated(string? target, string? name, int delay, bool admin, bool boot)
-    {
-        try
-        {
-            string? exe = Environment.ProcessPath;
-            if (string.IsNullOrEmpty(exe))
-                throw new InvalidOperationException("无法定位 BootPilot 自身的可执行文件路径。");
-
-            var sb = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(target))
-            {
-                sb.Append("--target \"").Append(target.Replace("\"", string.Empty)).Append('"');
-                if (!string.IsNullOrWhiteSpace(name))
-                    sb.Append(" --name \"").Append(name.Replace("\"", string.Empty)).Append('"');
-                sb.Append(" --delay ").Append(delay);
-                if (admin) sb.Append(" --admin");
-                if (boot) sb.Append(" --boot");
-            }
-
-            Process.Start(new ProcessStartInfo(exe)
-            {
-                UseShellExecute = true,
-                Verb = "runas",
-                Arguments = sb.ToString(),
-            });
-
-            Application.Current.Shutdown();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(this,
-                "提权启动失败：" + ex.Message + "\n\n你可以关闭 BootPilot，右键选择「以管理员身份运行」后再操作一次。",
-                "BootPilot — 提权失败", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
     }
 
     private void ClearForm()
@@ -422,27 +379,50 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ToggleItem_Click(object sender, RoutedEventArgs e)
+    private async void ToggleItem_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: AutoStartEntry entry }) return;
+        if (sender is not Button { Tag: AutoStartEntry entry } || _busy) return;
 
         bool next = !entry.Enabled;
+        string action = next ? "启用" : "禁用";
+
         try
         {
             _service.SetEnabled(entry.Name, next);
             entry.Enabled = next;
-            ShowToast(next ? $"已启用「{entry.DisplayName}」" : $"已禁用「{entry.DisplayName}」");
+            ShowToast($"已{action}「{entry.DisplayName}」");
+            return;
+        }
+        catch (BootPilotException ex) when (ex.Message.Contains("权限不足"))
+        {
+            var result = await Task.Run(() => ElevationBroker.Run(new ElevatedRequest
+            {
+                Action = next ? "Enable" : "Disable",
+                TaskName = entry.Name,
+                Enable = next,
+            }));
+
+            if (result.Ok)
+            {
+                entry.Enabled = next;
+                ShowToast($"已通过管理员权限{action}「{entry.DisplayName}」");
+            }
+            else
+            {
+                MessageBox.Show(this, result.Message, $"BootPilot — {action}失败",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "BootPilot — 操作失败",
+            MessageBox.Show(this, ex.Message, $"BootPilot — {action}失败",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
-    private void DeleteItem_Click(object sender, RoutedEventArgs e)
+    private async void DeleteItem_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button { Tag: AutoStartEntry entry }) return;
+        if (sender is not Button { Tag: AutoStartEntry entry } || _busy) return;
 
         var answer = MessageBox.Show(this,
             $"确定要删除自启项「{entry.DisplayName}」吗？\n\n删除后它就不会再自动启动，但程序本身不会被卸载或删除。",
@@ -456,6 +436,27 @@ public partial class MainWindow : Window
             _items.Remove(entry);
             UpdateListChrome();
             ShowToast($"已删除「{entry.DisplayName}」");
+            return;
+        }
+        catch (BootPilotException ex) when (ex.Message.Contains("权限不足"))
+        {
+            var result = await Task.Run(() => ElevationBroker.Run(new ElevatedRequest
+            {
+                Action = "Delete",
+                TaskName = entry.Name,
+            }));
+
+            if (result.Ok)
+            {
+                _items.Remove(entry);
+                UpdateListChrome();
+                ShowToast($"已通过管理员权限删除「{entry.DisplayName}」");
+            }
+            else
+            {
+                MessageBox.Show(this, result.Message, "BootPilot — 删除失败",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
         catch (Exception ex)
         {
@@ -486,12 +487,11 @@ public partial class MainWindow : Window
         bool boot = RbBoot.IsChecked == true;
         DelayLabel.Text = boot ? "启动后延迟" : "登录后延迟";
 
-        if (!boot || _suppressTriggerPrompt) return;
+        if (!boot) return;
 
-        if (!TaskSchedulerService.IsElevated)
-            ShowToast("「系统启动时」需要管理员权限，添加时会提示你提权");
-        else
-            ShowToast("提示：界面类程序在系统启动时运行是看不见的，建议用「用户登录时」");
+        ShowToast(TaskSchedulerService.IsElevated
+            ? "提示：界面类程序在系统启动时运行是看不见的，建议用「用户登录时」"
+            : "添加时会自动请求一次管理员权限");
     }
 
     private void TbDelay_PreviewTextInput(object sender, TextCompositionEventArgs e)
