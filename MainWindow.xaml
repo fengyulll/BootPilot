@@ -56,7 +56,7 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                     <Border x:Name="AdminBadge" CornerRadius="6" Padding="9,4" Margin="0,0,10,0"
-                            VerticalAlignment="Center" Background="#F2F4F8">
+                            VerticalAlignment="Center" Background="#F4F1EC">
                         <TextBlock x:Name="AdminBadgeText" Text="按需提权" FontSize="11"
                                    FontWeight="SemiBold" Foreground="{StaticResource B.TextSub}" />
                     </Border>
@@ -79,10 +79,10 @@
                         MouseLeftButtonUp="DropZone_Click">
                     <Grid>
                         <Rectangle x:Name="DropDash" RadiusX="9" RadiusY="9" Margin="7"
-                                   Stroke="#CBD5E5" StrokeThickness="1.6" StrokeDashArray="5 4"
+                                   Stroke="#D7CFC1" StrokeThickness="1.6" StrokeDashArray="5 4"
                                    IsHitTestVisible="False" />
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
-                            <Border Width="38" Height="38" CornerRadius="11" Background="#EFF4FE"
+                            <Border Width="38" Height="38" CornerRadius="11" Background="#FDF0E1"
                                     HorizontalAlignment="Center">
                                 <Viewbox Width="20" Height="20">
                                     <Canvas Width="16" Height="16">
@@ -225,7 +225,7 @@
                         </Grid>
 
                         <Border x:Name="EmptyHint" Visibility="Collapsed" Height="98" CornerRadius="10"
-                                Background="#FAFBFD" BorderBrush="#E4E9F2" BorderThickness="1"
+                                Background="#FBF9F6" BorderBrush="#E7E1D7" BorderThickness="1"
                                 Margin="0,13,0,0">
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <TextBlock Text="还没有自启项" FontSize="13"
@@ -244,11 +244,11 @@
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="Background" Value="#FFFFFF" />
-                                                <Setter Property="BorderBrush" Value="#EDF0F6" />
+                                                <Setter Property="BorderBrush" Value="#EDE8E0" />
                                                 <Style.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#F8FAFE" />
-                                                        <Setter Property="BorderBrush" Value="#DCE5F3" />
+                                                        <Setter Property="Background" Value="#FAF6F0" />
+                                                        <Setter Property="BorderBrush" Value="#E2D9CB" />
                                                     </Trigger>
                                                     <DataTrigger Binding="{Binding Enabled}" Value="False">
                                                         <Setter Property="Opacity" Value="0.62" />
@@ -266,7 +266,7 @@
                                             </Grid.ColumnDefinitions>
 
                                             <Border Width="34" Height="34" CornerRadius="9"
-                                                    Background="#F0F5FE" VerticalAlignment="Center">
+                                                    Background="#FDF1E3" VerticalAlignment="Center">
                                                 <Viewbox Width="16" Height="16">
                                                     <Canvas Width="16" Height="16">
                                                         <Path Style="{StaticResource PowerGlyph}" />
@@ -281,12 +281,12 @@
                                                                Foreground="{StaticResource B.Text}"
                                                                TextTrimming="CharacterEllipsis" />
                                                     <Border CornerRadius="4" Padding="5,0,5,1" Margin="7,0,0,0"
-                                                            Background="#F1F4FA" VerticalAlignment="Center">
+                                                            Background="#F4F1EC" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding StateText}" FontSize="10.5"
                                                                    Foreground="{Binding StateBrush}" />
                                                     </Border>
                                                     <Border CornerRadius="4" Padding="5,0,5,1" Margin="5,0,0,0"
-                                                            Background="#FFF4E3" VerticalAlignment="Center"
+                                                            Background="#FBE7E0" VerticalAlignment="Center"
                                                             Visibility="{Binding TargetMissing, Converter={StaticResource BoolToVis}}">
                                                         <TextBlock Text="目标已失效" FontSize="10.5"
                                                                    Foreground="{StaticResource B.Warn}" />
@@ -334,11 +334,11 @@
         <!-- ============ 浮动提示 ============ -->
         <Border x:Name="Toast" Grid.Row="1" Visibility="Collapsed" Opacity="0"
                 HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,30"
-                Background="#1E2430" CornerRadius="20" Padding="20,10"
+                Background="#262019" CornerRadius="20" Padding="20,10"
                 IsHitTestVisible="False">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="18" ShadowDepth="2" Direction="270"
-                                  Opacity="0.22" Color="#101623" />
+                                  Opacity="0.22" Color="#14100C" />
             </Border.Effect>
             <TextBlock x:Name="ToastText" Foreground="#FFFFFF" FontSize="12.5" />
         </Border>

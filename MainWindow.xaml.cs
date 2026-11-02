@@ -55,7 +55,7 @@ public partial class MainWindow : Window
     {
         if (TaskSchedulerService.IsElevated)
         {
-            AdminBadge.Background = new SolidColorBrush(Color.FromRgb(0xFF, 0xF4, 0xE3));
+            AdminBadge.Background = new SolidColorBrush(Color.FromRgb(0xFB, 0xE7, 0xE0));
             AdminBadgeText.Text = "管理员模式 · 拖放受限";
             AdminBadgeText.Foreground = (Brush)FindResource("B.Warn");
             AdminBadge.ToolTip =
@@ -112,14 +112,14 @@ public partial class MainWindow : Window
     private void SetDropActive(bool active)
     {
         DropZone.Background = active
-            ? new SolidColorBrush(Color.FromRgb(0xEF, 0xF4, 0xFE))
+            ? new SolidColorBrush(Color.FromRgb(0xFD, 0xF0, 0xE1))
             : Brushes.White;
         DropZone.BorderBrush = active
             ? (Brush)FindResource("B.Accent")
             : (Brush)FindResource("B.Border");
         DropDash.Stroke = active
             ? (Brush)FindResource("B.Accent")
-            : new SolidColorBrush(Color.FromRgb(0xCB, 0xD5, 0xE5));
+            : new SolidColorBrush(Color.FromRgb(0xD7, 0xCF, 0xC1));
         DropTitle.Text = active ? "松手即添加" : "把程序或文件拖到这里";
     }
 

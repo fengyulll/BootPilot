@@ -3,21 +3,21 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!-- ============ 颜色 ============ -->
-    <SolidColorBrush x:Key="B.Bg" Color="#F4F5F8" />
+    <SolidColorBrush x:Key="B.Bg" Color="#F7F5F2" />
     <SolidColorBrush x:Key="B.Card" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="B.Border" Color="#E5E9F0" />
-    <SolidColorBrush x:Key="B.BorderStrong" Color="#D3DAE5" />
-    <SolidColorBrush x:Key="B.Text" Color="#1E2430" />
-    <SolidColorBrush x:Key="B.TextSub" Color="#697386" />
-    <SolidColorBrush x:Key="B.TextFaint" Color="#9AA3B2" />
-    <SolidColorBrush x:Key="B.Accent" Color="#2F6FEB" />
-    <SolidColorBrush x:Key="B.AccentHover" Color="#1F5FD8" />
-    <SolidColorBrush x:Key="B.AccentSoft" Color="#EDF3FE" />
-    <SolidColorBrush x:Key="B.Danger" Color="#D24B4B" />
-    <SolidColorBrush x:Key="B.DangerSoft" Color="#FDEEEE" />
-    <SolidColorBrush x:Key="B.Ok" Color="#2E9E5B" />
-    <SolidColorBrush x:Key="B.OkSoft" Color="#EAF6EE" />
-    <SolidColorBrush x:Key="B.Warn" Color="#C07A12" />
+    <SolidColorBrush x:Key="B.Border" Color="#E9E4DC" />
+    <SolidColorBrush x:Key="B.BorderStrong" Color="#D9D2C6" />
+    <SolidColorBrush x:Key="B.Text" Color="#241F19" />
+    <SolidColorBrush x:Key="B.TextSub" Color="#6E675D" />
+    <SolidColorBrush x:Key="B.TextFaint" Color="#9E968A" />
+    <SolidColorBrush x:Key="B.Accent" Color="#C4530F" />
+    <SolidColorBrush x:Key="B.AccentHover" Color="#AC450B" />
+    <SolidColorBrush x:Key="B.AccentSoft" Color="#FDF0E1" />
+    <SolidColorBrush x:Key="B.Danger" Color="#C7443A" />
+    <SolidColorBrush x:Key="B.DangerSoft" Color="#FCEDE9" />
+    <SolidColorBrush x:Key="B.Ok" Color="#2F8F57" />
+    <SolidColorBrush x:Key="B.OkSoft" Color="#EAF5ED" />
+    <SolidColorBrush x:Key="B.Warn" Color="#B3401C" />
 
     <!-- ============ 文本 ============ -->
     <Style x:Key="T.Title" TargetType="TextBlock">
@@ -54,7 +54,7 @@
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="Effect">
             <Setter.Value>
-                <DropShadowEffect BlurRadius="14" ShadowDepth="1" Direction="270" Opacity="0.05" Color="#2A3550" />
+                <DropShadowEffect BlurRadius="14" ShadowDepth="1" Direction="270" Opacity="0.05" Color="#3A3128" />
             </Setter.Value>
         </Setter>
     </Style>
@@ -87,14 +87,14 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#B7C2D8" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#C6BDAD" />
                         </Trigger>
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
                             <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource B.Accent}" />
                             <Setter TargetName="bd" Property="BorderThickness" Value="1.5" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="bd" Property="Background" Value="#F3F5F8" />
+                            <Setter TargetName="bd" Property="Background" Value="#F4F1EC" />
                             <Setter Property="Foreground" Value="{StaticResource B.TextFaint}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -126,10 +126,10 @@
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.AccentHover}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#1A4FBC" />
+                            <Setter TargetName="bd" Property="Background" Value="#96380A" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="bd" Property="Background" Value="#AEC2E8" />
+                            <Setter TargetName="bd" Property="Background" Value="#E0BB9C" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -157,12 +157,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#F3F6FB" />
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#B7C2D8" />
+                            <Setter TargetName="bd" Property="Background" Value="#F8F5F0" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#C6BDAD" />
                             <Setter Property="Foreground" Value="{StaticResource B.Text}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#E9EEF7" />
+                            <Setter TargetName="bd" Property="Background" Value="#F0EBE3" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -190,12 +190,12 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#F1F4F9" />
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#E1E7F0" />
+                            <Setter TargetName="bd" Property="Background" Value="#F4F1EC" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#E6E0D7" />
                             <Setter Property="Foreground" Value="{StaticResource B.Text}" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#E6EBF4" />
+                            <Setter TargetName="bd" Property="Background" Value="#EDE7DD" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -219,10 +219,10 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="bd" Property="Background" Value="{StaticResource B.DangerSoft}" />
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#F3CFCF" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#EDC9C2" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#F9DDDD" />
+                            <Setter TargetName="bd" Property="Background" Value="#F5D6D0" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -249,7 +249,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <Border x:Name="ring" Width="16" Height="16" CornerRadius="8"
-                                    BorderBrush="#C3CCDC" BorderThickness="1.6"
+                                    BorderBrush="#CCC4B6" BorderThickness="1.6"
                                     VerticalAlignment="Top" Margin="0,1,10,0">
                                 <Ellipse x:Name="dot" Width="7.5" Height="7.5" Fill="White" Visibility="Collapsed" />
                             </Border>
@@ -258,7 +258,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#A8BAD8" />
+                            <Setter TargetName="bd" Property="BorderBrush" Value="#B3A998" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource B.Accent}" />
@@ -294,7 +294,7 @@
                     </StackPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="box" Property="BorderBrush" Value="#A8BAD8" />
+                            <Setter TargetName="box" Property="BorderBrush" Value="#B3A998" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="box" Property="Background" Value="{StaticResource B.Accent}" />
@@ -312,13 +312,13 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Thumb">
-                    <Border x:Name="bd" Background="#C6D1E2" CornerRadius="4" Margin="2,1" />
+                    <Border x:Name="bd" Background="#CFC7BA" CornerRadius="4" Margin="2,1" />
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#9DB0CB" />
+                            <Setter TargetName="bd" Property="Background" Value="#AFA695" />
                         </Trigger>
                         <Trigger Property="IsDragging" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#7E93B4" />
+                            <Setter TargetName="bd" Property="Background" Value="#918878" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

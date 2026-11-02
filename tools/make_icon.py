@@ -1,4 +1,4 @@
-"""生成 BootPilot 的 app.ico：蓝色渐变圆角方块 + 白色电源符号。
+"""生成 BootPilot 的 app.ico：琥珀渐变圆角方块 + 白色电源符号。
 
 纯标准库实现（zlib + struct），不依赖 Pillow。
 每个尺寸都独立按超采样渲染后收敛到目标尺寸，避免从大图缩放导致的裁切/比例错误。
@@ -26,23 +26,25 @@ def rounded_rect_alpha(x, y, size, radius):
 def style_for(size):
     """按尺寸给一套几何参数。
 
+    比例对齐同目录其它自制工具：圆角方块撑满约 94% 的画面，中心图形约占
+    46%~50%，四周留白要够，否则放在一起会显得"图标偏小、图案偏挤"。
     小尺寸必须单独加粗：16px 下圆环若只有 1.8px 粗，抗锯齿会把白色稀释成
-    浅蓝，整体糊成一团。尺寸越小，环越粗、缺口越大、越接近纯色。
+    浅蓝，整体糊成一团。
     """
     if size <= 16:
-        return dict(pad=0.03, corner=0.20, ring=0.375, thick=0.42, bar=0.078, gap=48, flat=True)
+        return dict(pad=0.015, corner=0.20, ring=0.262, thick=0.42, bar=0.070, gap=48, flat=True)
     if size <= 24:
-        return dict(pad=0.04, corner=0.21, ring=0.355, thick=0.38, bar=0.070, gap=44, flat=True)
+        return dict(pad=0.020, corner=0.21, ring=0.248, thick=0.38, bar=0.062, gap=44, flat=True)
     if size <= 32:
-        return dict(pad=0.05, corner=0.22, ring=0.335, thick=0.33, bar=0.060, gap=44, flat=False)
+        return dict(pad=0.024, corner=0.22, ring=0.240, thick=0.33, bar=0.052, gap=40, flat=False)
     if size <= 48:
-        return dict(pad=0.055, corner=0.23, ring=0.325, thick=0.28, bar=0.050, gap=36, flat=False)
-    return dict(pad=0.06, corner=0.24, ring=0.315, thick=0.245, bar=0.0425, gap=30, flat=False)
+        return dict(pad=0.027, corner=0.23, ring=0.232, thick=0.28, bar=0.042, gap=34, flat=False)
+    return dict(pad=0.030, corner=0.235, ring=0.225, thick=0.235, bar=0.035, gap=30, flat=False)
 
 
-def render(size, samples=4):
+def render(size, samples=4, cfg=None):
     """渲染 size x size 的逻辑图像，先按 samples 倍放大绘制，方便后面做面积平均。"""
-    cfg = style_for(size)
+    cfg = cfg or style_for(size)
     s = size * samples
     pad = s * cfg['pad']
     box = s - pad * 2
@@ -58,6 +60,8 @@ def render(size, samples=4):
     bar_bottom = cy - box * 0.02
     gap = cfg['gap']
     flat = cfg['flat']
+    c_top = cfg.get('c_top', (251, 146, 60))     # #FB923C 琥珀
+    c_bot = cfg.get('c_bot', (194, 65, 12))      # #C2410C 深琥珀
 
     px = bytearray()
     for j in range(s):
@@ -71,13 +75,16 @@ def render(size, samples=4):
                 continue
 
             if flat:
-                # 小尺寸用近纯色，渐变只会让 16px 显得脏
-                cr, cg, cb = 47, 111, 235
+                # 小尺寸用近纯色，渐变只会让 16px 显得脏；取 42% 处偏深的色，
+                # 保证白色符号在浅色相（琥珀）上也有足够对比。
+                cr = int(lerp(c_top[0], c_bot[0], 0.58))
+                cg = int(lerp(c_top[1], c_bot[1], 0.58))
+                cb = int(lerp(c_top[2], c_bot[2], 0.58))
             else:
                 t = (y - pad) / box
-                cr = int(lerp(86, 28, t))
-                cg = int(lerp(146, 78, t))
-                cb = int(lerp(246, 196, t))
+                cr = int(lerp(c_top[0], c_bot[0], t))
+                cg = int(lerp(c_top[1], c_bot[1], t))
+                cb = int(lerp(c_top[2], c_bot[2], t))
 
                 hl = max(0.0, 1.0 - math.hypot(x - pad - box * 0.30,
                                                y - pad - box * 0.24) / (box * 0.92))
