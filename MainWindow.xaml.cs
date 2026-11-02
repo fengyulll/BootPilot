@@ -272,14 +272,14 @@ public partial class MainWindow : Window
                     _service.CreateOrUpdate(spec);
                     created = true;
                 }
-                catch (BootPilotException ex) when (NeedsElevation(ex, boot))
+                catch (BootPilotException ex) when (ex.NeedsElevation || boot)
                 {
                     var result = await Task.Run(() => ElevationBroker.Run(
                         new ElevatedRequest { Action = "Create", Spec = spec }));
 
                     created = result.Ok;
                     elevatedUsed = result.Ok;
-                    error = result.Message;
+                    error = result.Ok ? null : result.Message;
                 }
             }
         }
@@ -302,13 +302,19 @@ public partial class MainWindow : Window
         }
         else if (!string.IsNullOrEmpty(error))
         {
-            MessageBox.Show(this, error, "BootPilot — 添加失败",
+            MessageBox.Show(this, error + ElevationHint(error), "BootPilot — 添加失败",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
-    private static bool NeedsElevation(BootPilotException ex, bool bootTrigger)
-        => bootTrigger || ex.Message.Contains("权限不足");
+    /// <summary>即使提权也失败时，多半是被安全软件拦了，给一句可操作的建议。</summary>
+    private static string ElevationHint(string message)
+    {
+        if (!message.Contains("拒绝访问") && !message.Contains("权限不足")) return string.Empty;
+        return "\n\n如果刚才已经确认过管理员授权，那么很可能是安全软件（杀毒 / 安全卫士 / EDR）" +
+               "拦截了「创建计划任务」这个动作。\n" +
+               "可以尝试：把 BootPilot.exe 加入安全软件的白名单，或临时退出安全软件后重试。";
+    }
 
     private int ParseDelay()
     {
@@ -393,7 +399,7 @@ public partial class MainWindow : Window
             ShowToast($"已{action}「{entry.DisplayName}」");
             return;
         }
-        catch (BootPilotException ex) when (ex.Message.Contains("权限不足"))
+        catch (BootPilotException ex) when (ex.NeedsElevation)
         {
             var result = await Task.Run(() => ElevationBroker.Run(new ElevatedRequest
             {
@@ -409,8 +415,8 @@ public partial class MainWindow : Window
             }
             else
             {
-                MessageBox.Show(this, result.Message, $"BootPilot — {action}失败",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, result.Message + ElevationHint(result.Message),
+                    $"BootPilot — {action}失败", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         catch (Exception ex)
@@ -438,7 +444,7 @@ public partial class MainWindow : Window
             ShowToast($"已删除「{entry.DisplayName}」");
             return;
         }
-        catch (BootPilotException ex) when (ex.Message.Contains("权限不足"))
+        catch (BootPilotException ex) when (ex.NeedsElevation)
         {
             var result = await Task.Run(() => ElevationBroker.Run(new ElevatedRequest
             {
@@ -454,8 +460,8 @@ public partial class MainWindow : Window
             }
             else
             {
-                MessageBox.Show(this, result.Message, "BootPilot — 删除失败",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(this, result.Message + ElevationHint(result.Message),
+                    "BootPilot — 删除失败", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
         catch (Exception ex)

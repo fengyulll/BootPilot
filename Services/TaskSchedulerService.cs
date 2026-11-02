@@ -32,7 +32,14 @@ public sealed class TaskSpec
 
 public sealed class BootPilotException : Exception
 {
-    public BootPilotException(string message, Exception? inner = null) : base(message, inner) { }
+    /// <summary>这次失败是不是「权限不够」，调用方据此决定要不要走提权通道。</summary>
+    public bool NeedsElevation { get; }
+
+    public BootPilotException(string message, Exception? inner = null, bool needsElevation = false)
+        : base(message, inner)
+    {
+        NeedsElevation = needsElevation;
+    }
 }
 
 /// <summary>
@@ -208,7 +215,7 @@ public sealed class TaskSchedulerService
         }
         catch (Exception ex)
         {
-            throw new BootPilotException(Humanize(ex), ex);
+            throw new BootPilotException(Humanize(ex), ex, IsAccessDenied(ex));
         }
     }
 
@@ -225,7 +232,7 @@ public sealed class TaskSchedulerService
         {
             if (RunSchtasks("/delete", "/tn", taskName, "/f"))
                 return;
-            throw new BootPilotException("删除计划任务失败：" + Humanize(ex), ex);
+            throw new BootPilotException("删除计划任务失败：" + Humanize(ex), ex, IsAccessDenied(ex));
         }
     }
 
@@ -244,7 +251,7 @@ public sealed class TaskSchedulerService
             bool ok = RunSchtasks("/change", "/tn", taskName, enabled ? "/enable" : "/disable");
             if (ok) return;
             throw new BootPilotException(
-                (enabled ? "启用" : "禁用") + "计划任务失败：" + Humanize(ex), ex);
+                (enabled ? "启用" : "禁用") + "计划任务失败：" + Humanize(ex), ex, IsAccessDenied(ex));
         }
     }
 
@@ -263,7 +270,8 @@ public sealed class TaskSchedulerService
         {
             if (RunSchtasks("/run", "/tn", taskName)) return;
             throw new BootPilotException(
-                "启动失败。可能原因：目标程序已被移动或删除，或当前账户对该任务没有运行权限。", ex);
+                "启动失败。可能原因：目标程序已被移动或删除，或当前账户对该任务没有运行权限。", ex,
+                IsAccessDenied(ex));
         }
     }
 
@@ -307,15 +315,33 @@ public sealed class TaskSchedulerService
         catch { return false; }
     }
 
+    /// <summary>
+    /// 异常链里是否含「拒绝访问」（0x80070005）。
+    /// 注意：.NET 的 COM 互操作把 E_ACCESSDENIED 抛成 UnauthorizedAccessException，
+    /// 而不是 COMException，所以必须按类型 + HRESULT 双重判断，不能只看 COMException。
+    /// </summary>
+    private static bool IsAccessDenied(Exception? ex)
+    {
+        while (ex is not null)
+        {
+            if (ex is UnauthorizedAccessException) return true;
+            if (ex.HResult == unchecked((int)0x80070005)) return true;
+            ex = ex.InnerException;
+        }
+        return false;
+    }
+
     private static string Humanize(Exception ex)
     {
         if (ex is BootPilotException bpe) return bpe.Message;
+
+        if (IsAccessDenied(ex))
+            return "权限不足（拒绝访问）。这一步需要管理员权限。";
 
         if (ex is COMException com)
         {
             return (uint)com.HResult switch
             {
-                0x80070005 => "权限不足（拒绝访问）。这一步需要管理员权限。",
                 0x80070002 => "找不到目标程序或文件，请确认路径没有被移动或删除。",
                 0x8007007B => "路径格式不正确，请检查是否含有非法字符。",
                 0x80070057 => "参数无效，目标路径或参数可能包含计划任务不接受的字符。",
