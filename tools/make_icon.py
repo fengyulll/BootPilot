@@ -100,7 +100,8 @@ def render(size, samples=4):
 
 
 def downsample(raw, s, target, samples):
-    """把 (s x s, samples 倍超采样) 的原始数据收敛成 target x target。
+    """把 (s x s, samples 倍超采样) 的原始数据收敛成 target x target 的**纯 RGBA**
+    （不含 PNG 行过滤字节——png_bytes 会自己加）。
 
     RGB 必须按 alpha 加权平均：透明像素的 RGB 是 (0,0,0)，直接算术平均会把
     黑色混进边缘，表现为圆角/描边处出现脏的暗边和彩色噪点。
@@ -109,7 +110,6 @@ def downsample(raw, s, target, samples):
     stride = 1 + s * 4
     n = samples * samples
     for j in range(target):
-        out.append(0)
         for i in range(target):
             sa = sr = sg = sb = 0
             for dy in range(samples):
