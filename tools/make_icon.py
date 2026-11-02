@@ -23,21 +23,41 @@ def rounded_rect_alpha(x, y, size, radius):
     return 1.0 if math.hypot(x - cx, y - cy) <= radius else 0.0
 
 
+def style_for(size):
+    """按尺寸给一套几何参数。
+
+    小尺寸必须单独加粗：16px 下圆环若只有 1.8px 粗，抗锯齿会把白色稀释成
+    浅蓝，整体糊成一团。尺寸越小，环越粗、缺口越大、越接近纯色。
+    """
+    if size <= 16:
+        return dict(pad=0.03, corner=0.20, ring=0.375, thick=0.42, bar=0.078, gap=48, flat=True)
+    if size <= 24:
+        return dict(pad=0.04, corner=0.21, ring=0.355, thick=0.38, bar=0.070, gap=44, flat=True)
+    if size <= 32:
+        return dict(pad=0.05, corner=0.22, ring=0.335, thick=0.33, bar=0.060, gap=44, flat=False)
+    if size <= 48:
+        return dict(pad=0.055, corner=0.23, ring=0.325, thick=0.28, bar=0.050, gap=36, flat=False)
+    return dict(pad=0.06, corner=0.24, ring=0.315, thick=0.245, bar=0.0425, gap=30, flat=False)
+
+
 def render(size, samples=4):
     """渲染 size x size 的逻辑图像，先按 samples 倍放大绘制，方便后面做面积平均。"""
+    cfg = style_for(size)
     s = size * samples
-    pad = s * 0.06
+    pad = s * cfg['pad']
     box = s - pad * 2
-    corner = box * 0.24
+    corner = box * cfg['corner']
 
     # 电源符号几何（相对 box）
-    ring_outer = box * 0.315
-    ring_inner = ring_outer * 0.755
+    ring_outer = box * cfg['ring']
+    ring_inner = ring_outer * (1.0 - cfg['thick'])
     cx = pad + box / 2
     cy = pad + box / 2 + box * 0.045
-    bar_half = box * 0.0425
-    bar_top = pad + box * 0.155
+    bar_half = box * cfg['bar']
+    bar_top = cy - ring_outer * 1.06
     bar_bottom = cy - box * 0.02
+    gap = cfg['gap']
+    flat = cfg['flat']
 
     px = bytearray()
     for j in range(s):
@@ -50,22 +70,25 @@ def render(size, samples=4):
                 px.extend((0, 0, 0, 0))
                 continue
 
-            # 竖向渐变
-            t = (y - pad) / box
-            cr = int(lerp(86, 28, t))
-            cg = int(lerp(146, 78, t))
-            cb = int(lerp(246, 196, t))
+            if flat:
+                # 小尺寸用近纯色，渐变只会让 16px 显得脏
+                cr, cg, cb = 47, 111, 235
+            else:
+                t = (y - pad) / box
+                cr = int(lerp(86, 28, t))
+                cg = int(lerp(146, 78, t))
+                cb = int(lerp(246, 196, t))
 
-            # 左上角高光
-            hl = max(0.0, 1.0 - math.hypot(x - pad - box * 0.30, y - pad - box * 0.24) / (box * 0.92))
-            cr = min(255, int(cr + 42 * hl))
-            cg = min(255, int(cg + 36 * hl))
-            cb = min(255, int(cb + 20 * hl))
+                hl = max(0.0, 1.0 - math.hypot(x - pad - box * 0.30,
+                                               y - pad - box * 0.24) / (box * 0.92))
+                cr = min(255, int(cr + 42 * hl))
+                cg = min(255, int(cg + 36 * hl))
+                cb = min(255, int(cb + 20 * hl))
 
             dx, dy = x - cx, y - cy
             dist = math.hypot(dx, dy)
             angle = math.degrees(math.atan2(-dy, dx))  # 0=右, 90=上
-            in_gap = 62.0 < angle < 118.0              # 顶部开口
+            in_gap = (90.0 - gap) < angle < (90.0 + gap)
 
             if ((ring_inner <= dist <= ring_outer) and not in_gap) or \
                (abs(dx) <= bar_half and bar_top <= y <= bar_bottom):
