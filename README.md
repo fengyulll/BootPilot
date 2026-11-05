@@ -39,20 +39,25 @@
 
 ## 构建
 
-需要 .NET 8 SDK（Windows）。
+需要 [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)（Windows）。
 
 ```bash
-dotnet build -c Release
 dotnet publish -c Release -o publish
 ```
 
-产物是单文件 `publish/BootPilot.exe`（framework-dependent，需要 .NET 8 Desktop Runtime）。
+产物是**单文件** `publish/BootPilot.exe`（约 340 KB，framework-dependent，需要 .NET 8 Desktop Runtime）。发布时只取这一个文件即可，同目录不需要任何别的东西。
 
-重新生成图标（纯 Python，无需 Pillow）：
+> ⚠️ 不要去 `bin/` 里拿 `BootPilot.exe`。那个是 `.NET` 的启动器（约 190 KB），必须和同目录的 `BootPilot.dll`、`BootPilot.deps.json`、`BootPilot.runtimeconfig.json` 放在一起才能跑，单独拷走会报「找不到 BootPilot.dll」。只有 `publish/` 下那个才是真正打包好的。
+
+目标架构写在 `BootPilot.csproj` 的 `<RuntimeIdentifier>` 里（当前 `win-x64`），要出 arm64 就改这一项。
+
+重新生成图标（纯 Python 标准库，不需要 Pillow）：
 
 ```bash
 python tools/make_icon.py
 ```
+
+生成过程是确定性的——同样的代码永远产出同样的字节，可以直接和仓库里的 `app.ico` 对比校验。
 
 ## 实现要点
 
